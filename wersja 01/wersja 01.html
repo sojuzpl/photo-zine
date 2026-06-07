@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PhotoZineForge // A4</title>
+        
+        <meta name="author" content="Zbigniew Pietras">
+        <meta name="description" content="Kreator składu i automatycznej impozycji mikro-photo-zina w formacie A4">
+        <meta name="robots" content="index, follow">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+        <style>
+        :root {
+            --bg-main: #f0f2f5;
+            --bg-sidebar: #1e222b;
+            --bg-card: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #ec4899;
+            --text-dark: #1f2937;
+            --text-light: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #e5e7eb;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* PANEL BOCZNY (STEROWANIE) */
+        .sidebar {
+            width: 420px;
+            background-color: var(--bg-sidebar);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sidebar-header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #818cf8, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header p {
+            margin: 6px 0 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .editors-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* STYLIZACJA KART FORMULARZA */
+        .page-editor {
+            /* Domyślnie jaśniejszy kolor dla pustych stron */
+            background: #3f4756; 
+            border-radius: var(--radius-md);
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: var(--transition);
+        }
+
+        .page-editor:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: #475061;
+        }
+
+        /* Klasa dla stron, które mają już załadowane zdjęcie oraz dla okładki */
+        .page-editor.has-image, 
+        .page-editor.cover-editor {
+            background: #232731;
+            border-color: rgba(255,255,255,0.05);
+        }
+        
+        .page-editor.has-image:hover {
+            background: hsl(150, 68%, 9%);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .page-editor h3 {
+            margin: 0 0 14px 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #10b981;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-editor.cover-editor h3 { color: var(--accent); }
+
+        .control-group { display: flex; flex-direction: column; gap: 12px; }
+
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-row label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .control-row select, 
+        .control-row textarea {
+            background: #1e222b;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+
+        .control-row select:focus, 
+        .control-row textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+
+        /* CUSTOMOWY PRZYCISK UPLOADU PLIKU */
+        .file-upload-zone {
+            position: relative;
+            border: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .file-upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .file-upload-zone input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+
+        .file-upload-text {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .file-upload-text span { color: var(--text-muted); font-size: 10px; }
+
+        /* SŁUWAKI (SLIDERS) */
+        .slider-container {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0,0,0,0.15);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+        .slider-container.visible { display: flex; }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .slider-header .val-indicator { color: #10b981; font-weight: 600; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e222b;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: #6366f1;}
+
+        /* PRZYCISK POBIERANIA */
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: #15181e;
+        }
+
+        button.main-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            transition: var(--transition);
+        }
+
+        button.main-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        /* PRAWA STRONA: STÓŁ ROBOCZY I PODGLĄD */
+        .workspace {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .workspace-header {
+            text-align: center;
+            padding-top: 24px;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .workspace-header h2 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-dark); }
+        .workspace-header p { margin: 6px 0 0 0; font-size: 13px; color: #6b7280; }
+
+        .preview-window {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+        }
+
+        /* SIATKA MAKIETY */
+        .zine-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+            background-color: #f3f4f6;
+            border: 2px solid #1f2937;
+            aspect-ratio: 1.4142; /* Stały stosunek proporcji A4 poziom */
+            width: 100%;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .grid-cell {
+            background-color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 0 1px #e5e7eb;
+        }
+
+        .grid-cell.cover-cell {
+            text-align: center;
+            padding: 12px;
+            box-sizing: border-box;
+            word-break: break-word;
+        }
+
+        .grid-cell span.badge {
+            position: absolute;
+            top: 6px; left: 6px;
+            background: rgba(31, 41, 55, 0.85);
+            color: white;
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: 600;
+            border-radius: 4px;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        .grid-cell img {
+            display: block; pointer-events: none; position: absolute;
+        }
+        .grid-cell img.fit-height { height: 100%; width: auto; }
+        .grid-cell img.fit-width  { width: 100%; height: auto; }
+
+        .grid-cell .placeholder {
+            color: #d1d5db;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .upside-down { transform: rotate(180deg); }
+
+        /* Ukrywanie natywnego scrollbara dla czystego wyglądu */
+        .editors-wrapper::-webkit-scrollbar { width: 6px; }
+        .editors-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .editors-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .editors-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* STYLIZACJA STOPKI INFORMACYJNEJ */
+        .app-footer {
+            margin: 30px 0 0 0;
+            padding: 24px 0 24px 0;
+            background: white; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow); 
+            max-width: 900px; 
+            width: 100%; 
+            box-sizing: border-box;
+        }
+
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280; /* Dyskretny, szary kolor tekstu */
+            line-height: 1.6;
+        }
+
+        .footer-content p {
+            margin: 4px 0;
+        }
+
+        .footer-content strong {
+            color: var(--text-dark); /* Mocniejszy akcent dla nazwiska i licencji */
+        }
+
+        .footer-meta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .footer-divider {
+            color: var(--border-color);
+        }
+
+        @media (max-width: 480px) {
+            .footer-meta {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .footer-divider {
+                display: none;
+            }
+        }
+
+        /* STYL LINKU W STOPCE */
+        .footer-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #4f46e5; /* Subtelna zmiana koloru na Twój akcent systemowy przy hoverze */
+            border-bottom-style: solid;
+            border-bottom-color: #4f46e5;
+        }
+
+        </style>
+    </head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>PhotoZineForge <span>// A4</span></h1>
+            <p>Kreator składu i impozycji mikro-photo-zina</p>
+        </div>
+        
+        <div class="editors-wrapper" id="editors-container">
+            </div>
+
+        <div class="sidebar-footer">
+            <button class="main-btn" id="download-btn">Eksportuj gotowy arkusz PDF</button>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <div class="workspace-header">
+            <h2>Makieta impozycji (składka drukarska)</h2>
+            <p>Arkusz zostanie wydrukowany jednostronnie na formacie A4. Linie podziału ułatwiają późniejsze nacięcie i złożenie książeczki.</p>
+        </div>
+        
+        <div class="preview-window">
+            <div class="zine-grid" id="preview-grid"></div>
+        </div>
+        <div style="margin-top: 30px; padding: 20px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow); max-width: 900px; width: 100%; box-sizing: border-box;">
+            <h3 style="margin-top: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                <span>✂️</span> Jak złożyć wydrukowany PhotoZine?
+            </h3>
+            <ol style="padding-left: 20px; font-size: 13px; line-height: 1.6; color: #4b5563;">
+                <li><b>Zegnij wzdłuż:</b> Złóż kartkę na pół wzdłuż długiej krawędzi, dociśnij zgięcie i rozłóż z powrotem.</li>
+                <li><b>Zegnij w poprzek:</b> Złóż kartkę na pół w poprzek, a potem każde skrzydło jeszcze raz na pół (w harmonijkę), by powstało 8 równych sekcji. Rozłóż.</li>
+                <li><b>Zrób nacięcie:</b> Złóż kartkę na pół w poprzek. Rozetnij środek wzdłuż linii zgięcia (od złożonego grzbietu do środka siatki – czyli tylko przez szerokość dwóch wewnętrznych stron).</li>
+                <li><b>Złóż w książeczkę:</b> Rozłóż kartkę i złóż ją wzdłuż. Pchnij brzegi do środka, aby nacięcie otworzyło się jak "paszcza". Złóż skrzydełka w formę książeczki tak, by okładka była z przodu!</li>
+            </ol>
+            <div style="width: 100%; border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                <img src="instrukcja.jpg" alt="Schemat składania zina krok po kroku" style="max-width: 100%; height: auto; border-radius: var(--radius-md); display: block; margin: 0 auto;">
+            </div>
+        </div>
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>&copy; 2026 <strong>Zbigniew Pietras</strong>. Wszystkie prawa zastrzeżone.</p>
+                <p class="footer-meta">
+                    <span>Kod źródłowy na licencji <a href="https://choosealicense.com/licenses/mit/" target="_blank" rel="noopener noreferrer" class="footer-link"><strong>MIT</strong></a></span>
+                    <span class="footer-divider">|</span>
+                    <span>Wersja <strong>v1.0.0</strong></span>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const impositionLayout = [
+            { pageNum: 3, isRotated: true }, { pageNum: 4, isRotated: true },
+            { pageNum: 5, isRotated: true }, { pageNum: 6, isRotated: true },
+            { pageNum: 2, isRotated: false }, { pageNum: 1, isRotated: false, label: "1 (Okładka)" },
+            { pageNum: 8, isRotated: false, label: "8 (Tył)" }, { pageNum: 7, isRotated: false }
+        ];
+
+        const zineState = {
+            1: { isCover: true, text: "MÓJ ZIN\nwersja 02", theme: "black", fontSize: 32, fontFamily: "sans-serif" }
+        };
+        
+        for(let i=2; i<=8; i++) {
+            zineState[i] = { isCover: false, imgObject: null, imgSrc: null, cropPercent: 50, cropMode: 'X' };
+        }
+
+        const editorsContainer = document.getElementById('editors-container');
+
+        for (let i = 1; i <= 8; i++) {
+            const pageBox = document.createElement('div');
+            pageBox.id = `editor-page-${i}`; // DODANE: Łatwy identyfikator dla JS
+            if (i === 1) {
+                pageBox.className = 'page-editor cover-editor';
+                pageBox.innerHTML = `
+                    <h3>Strona 1 (Okładka)</h3>
+                    <div class="control-group">
+                        <div class="control-row">
+                            <label>Tekst tytułowy</label>
+                            <textarea id="cover-text" rows="3" oninput="handleCoverText(this.value)">${zineState[1].text}</textarea>
+                        </div>
+                        <div class="control-row">
+                            <label>Stylistyka okładki</label>
+                            <select onchange="handleCoverTheme(this.value)">
+                                <option value="black" selected>Czarne tło / Biały tekst</option>
+                                <option value="white">Białe tło / Czarny tekst</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <label>Krój Pisma</label>
+                            <select onchange="handleCoverFont(this.value)">
+                                <option value="sans-serif">Nowoczesny (Sans-Serif)</option>
+                                <option value="serif">Klasyczny (Serif)</option>
+                                <option value="monospace">Techniczny (Monospace)</option>
+                            </select>
+                        </div>
+                        <div class="slider-container visible">
+                            <div class="slider-header">
+                                <label>Rozmiar czcionki</label>
+                                <span class="val-indicator" id="cover-size-val">21 pt</span>
+                            </div>
+                            <input type="range" min="12" max="98" value="${zineState[1].fontSize}" oninput="handleCoverSize(this.value)">
+                        </div>
+                    </div>`;
+            } else {
+                const labelText = i === 8 ? "Strona 8 (Tył książki)" : `Strona ${i}`;
+                pageBox.className = 'page-editor';
+                pageBox.innerHTML = `
+                    <h3>${labelText}</h3>
+                    <div class="control-group">
+                        <div class="file-upload-zone">
+                            <div class="file-upload-text">
+                                <b>Wgraj ilustrację</b>
+                                <span>Kliknij, aby wybrać plik JPG / PNG</span>
+                            </div>
+                            <input type="file" accept="image/*" onchange="handleFile(${i}, this)">
+                        </div>
+                        <div class="slider-container" id="slider-box-${i}">
+                            <div class="slider-header">
+                                <label id="slider-label-${i}">Kadrowanie obrazu</label>
+                                <span class="val-indicator" id="val-${i}">Środek</span>
+                            </div>
+                            <input type="range" id="crop-${i}" min="0" max="100" value="50" oninput="handleCropChange(${i}, this.value)">
+                        </div>
+                    </div>`;
+            }
+            editorsContainer.appendChild(pageBox);
+        }
+
+        function handleCoverText(val) { zineState[1].text = val; updatePreview(); }
+        function handleCoverTheme(val) { zineState[1].theme = val; updatePreview(); }
+        function handleCoverFont(val) { zineState[1].fontFamily = val; updatePreview(); }
+        function handleCoverSize(val) { 
+            zineState[1].fontSize = parseInt(val); 
+            const ptSize = Math.round(val * 0.65);
+            document.getElementById('cover-size-val').innerText = ptSize + ' pt'; 
+            updatePreview(); 
+        }
+
+        function handleFile(pageNum, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    zineState[pageNum].imgObject = img;
+                    zineState[pageNum].imgSrc = e.target.result;
+                    zineState[pageNum].cropPercent = 50;
+
+                    // DODANE: Znajdujemy kartę i zmieniamy jej tło na ciemniejsze (załadowane)
+                    document.getElementById(`editor-page-${pageNum}`).classList.add('has-image');
+                    
+                    const imgRatio = img.width / img.height;
+                    const targetRatio = 74.25 / 105;
+
+                    if (imgRatio > targetRatio) {
+                        zineState[pageNum].cropMode = 'X';
+                        document.getElementById(`slider-label-${pageNum}`).innerText = "Kadr (Poziom)";
+                    } else {
+                        zineState[pageNum].cropMode = 'Y';
+                        document.getElementById(`slider-label-${pageNum}`).innerText = "Kadr (Pion)";
+                    }
+                    
+                    document.getElementById(`slider-box-${pageNum}`).classList.add('visible');
+                    document.getElementById(`crop-${pageNum}`).value = 50;
+                    document.getElementById(`val-${pageNum}`).innerText = 'Środek';
+                    updatePreview();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleCropChange(pageNum, value) {
+            zineState[pageNum].cropPercent = parseInt(value);
+            const label = document.getElementById(`val-${pageNum}`);
+            const mode = zineState[pageNum].cropMode;
+            
+            if(value == 50) label.innerText = 'Środek';
+            else if(value < 50) label.innerText = mode === 'X' ? 'W lewo' : 'W górę';
+            else label.innerText = mode === 'X' ? 'W prawo' : 'W dół';
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const previewGrid = document.getElementById('preview-grid');
+            previewGrid.innerHTML = '';
+
+            impositionLayout.forEach(cell => {
+                const cellDiv = document.createElement('div');
+                const pageData = zineState[cell.pageNum];
+                
+                const label = cell.label ? cell.label : `Str. ${cell.pageNum}`;
+                cellDiv.innerHTML = `<span class="badge" style="${pageData.isCover && pageData.theme === 'black' ? 'background:rgba(255,255,255,0.4);color:#000;' : ''}">${label}</span>`;
+
+                if (pageData.isCover) {
+                    cellDiv.className = `grid-cell cover-cell ${cell.isRotated ? 'upside-down' : ''}`;
+                    cellDiv.style.backgroundColor = pageData.theme === 'black' ? '#111' : '#fff';
+                    cellDiv.style.color = pageData.theme === 'black' ? '#fff' : '#111';
+                    cellDiv.style.fontSize = `${pageData.fontSize / 1.8}px`;
+                    cellDiv.style.fontFamily = pageData.fontFamily;
+                    
+                    const textNode = document.createElement('div');
+                    textNode.style.whiteSpace = "pre-line"; 
+                    textNode.innerText = pageData.text;
+                    cellDiv.appendChild(textNode);
+                } else {
+                    cellDiv.className = `grid-cell ${cell.isRotated ? 'upside-down' : ''}`;
+                    if (pageData.imgSrc) {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = pageData.imgSrc;
+                        
+                        if (pageData.cropMode === 'X') imgEl.className = 'fit-height';
+                        else imgEl.className = 'fit-width';
+                        
+                        cellDiv.appendChild(imgEl);
+                        
+                        setTimeout(() => {
+                            const containerWidth = cellDiv.clientWidth;
+                            const containerHeight = cellDiv.clientHeight;
+                            const imgWidth = imgEl.clientWidth;
+                            const imgHeight = imgEl.clientHeight;
+                            
+                            if (pageData.cropMode === 'X') {
+                                const maxScroll = imgWidth - containerWidth;
+                                if (maxScroll > 0) {
+                                    const finalPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                                    const offset = (finalPct / 100) * maxScroll;
+                                    imgEl.style.left = `-${offset}px`;
+                                    imgEl.style.top = '0px';
+                                }
+                            } else {
+                                const maxScroll = imgHeight - containerHeight;
+                                if (maxScroll > 0) {
+                                    const finalPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                                    const offset = (finalPct / 100) * maxScroll;
+                                    imgEl.style.top = `-${offset}px`;
+                                    imgEl.style.left = '0px';
+                                }
+                            }
+                        }, 0);
+                    } else {
+                        cellDiv.innerHTML += `<div class="placeholder">[ Brak obrazu ]</div>`;
+                    }
+                }
+                previewGrid.appendChild(cellDiv);
+            });
+        }
+
+        document.getElementById('download-btn').addEventListener('click', () => {
+            try {
+                if (!window.jspdf) {
+                    alert("Błąd: Biblioteka jsPDF nie została załadowana.");
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+                const pageWidth = 297; const pageHeight = 210;
+                const cellWidth = pageWidth / 4; const cellHeight = pageHeight / 2;
+
+                doc.setDrawColor(210, 210, 210); 
+                doc.setLineWidth(0.1);
+                
+                doc.line(cellWidth, 0, cellWidth, pageHeight); 
+                doc.line(cellWidth * 2, 0, cellWidth * 2, pageHeight); 
+                doc.line(cellWidth * 3, 0, cellWidth * 3, pageHeight); 
+                doc.line(0, cellHeight, pageWidth, cellHeight);
+
+                impositionLayout.forEach((cell, index) => {
+                    const col = index % 4; const row = Math.floor(index / 4);
+                    const x = col * cellWidth; const y = row * cellHeight;
+                    const pageData = zineState[cell.pageNum];
+
+                    if (pageData.isCover) {
+                        if (pageData.theme === 'black') {
+                            doc.setFillColor(15, 15, 15); doc.rect(x, y, cellWidth, cellHeight, 'F'); doc.setTextColor(255, 255, 255);
+                        } else {
+                            doc.setFillColor(255, 255, 255); doc.rect(x, y, cellWidth, cellHeight, 'F'); doc.setTextColor(15, 15, 15);
+                        }
+                        
+                        let pdfFont = 'helvetica';
+                        if (pageData.fontFamily === 'serif') pdfFont = 'times';
+                        if (pageData.fontFamily === 'monospace') pdfFont = 'courier';
+
+                        const actualPtSize = Math.round(pageData.fontSize * 0.65); 
+                        doc.setFont(pdfFont, 'bold'); 
+                        doc.setFontSize(actualPtSize);
+
+                        const maxTextWidth = cellWidth - 10;
+                        const lines = doc.splitTextToSize(pageData.text, maxTextWidth);
+                        
+                        const lineHeightInMm = (actualPtSize * 0.3527) * 1.15; 
+                        const totalTextHeight = lines.length * lineHeightInMm;
+                        const startY = y + (cellHeight / 2) - (totalTextHeight / 2) + (lineHeightInMm / 1.3);
+
+                        lines.forEach((line, lineIdx) => {
+                            const currentLineY = startY + (lineIdx * lineHeightInMm);
+                            if (currentLineY < y + cellHeight - 2) {
+                                doc.text(line, x + (cellWidth / 2), currentLineY, { align: 'center' });
+                            }
+                        });
+                    } else if (pageData.imgObject) {
+                        const img = pageData.imgObject;
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        canvas.width = cellWidth * 4;  
+                        canvas.height = cellHeight * 4;
+
+                        let sx = 0, sy = 0, sw, sh;
+
+                        if (pageData.cropMode === 'X') {
+                            const scaleFactor = canvas.height / img.height;
+                            const totalMissingWidthOriginal = img.width - (canvas.width / scaleFactor);
+                            const appliedPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                            sx = totalMissingWidthOriginal * (appliedPct / 100);
+                            sw = canvas.width / scaleFactor;
+                            sh = img.height;
+                        } else {
+                            const scaleFactor = canvas.width / img.width;
+                            const totalMissingHeightOriginal = img.height - (canvas.height / scaleFactor);
+                            const appliedPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                            sy = totalMissingHeightOriginal * (appliedPct / 100);
+                            sw = img.width;
+                            sh = canvas.height / scaleFactor;
+                        }
+
+                        if (cell.isRotated) {
+                            ctx.translate(canvas.width / 2, canvas.height / 2);
+                            ctx.rotate(Math.PI);
+                            ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                        }
+
+                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                        const finalImgData = canvas.toDataURL('image/jpeg', 0.95);
+                        doc.addImage(finalImgData, 'JPEG', x, y, cellWidth, cellHeight);
+                    }
+                });
+
+                doc.save('perfekt-zine-arkusz.pdf');
+            } catch (error) {
+                alert("Wystąpił nieoczekiwany błąd podczas generowania PDF: " + error.message);
+            }
+        });
+
+        updatePreview();
+    </script>
+</body>
+</html>

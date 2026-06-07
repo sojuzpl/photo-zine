@@ -1,0 +1,408 @@
+:root {
+    --bg-main: #f0f2f5;
+    --bg-sidebar: #1e222b;
+    --bg-card: #ffffff;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --accent: #ec4899;
+    --text-dark: #1f2937;
+    --text-light: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --transition: all 0.2s ease-in-out;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    margin: 0;
+    padding: 0;
+    color: var(--text-dark);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* PANEL BOCZNY (STEROWANIE) */
+.sidebar {
+    width: 420px;
+    background-color: var(--bg-sidebar);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+.sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(to right, #818cf8, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-header p {
+    margin: 6px 0 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.editors-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* STYLIZACJA KART FORMULARZA */
+.page-editor {
+    /* Domyślnie jaśniejszy kolor dla pustych stron */
+    background: #3f4756; 
+    border-radius: var(--radius-md);
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: var(--transition);
+}
+
+.page-editor:hover {
+    border-color: rgba(255,255,255,0.25);
+    background: #475061;
+}
+
+/* Klasa dla stron, które mają już załadowane zdjęcie oraz dla okładki */
+.page-editor.has-image, 
+.page-editor.cover-editor {
+    background: #232731;
+    border-color: rgba(255,255,255,0.05);
+}
+
+.page-editor.has-image:hover {
+    background: hsl(150, 68%, 9%);
+    border-color: rgba(255,255,255,0.15);
+}
+
+.page-editor h3 {
+    margin: 0 0 14px 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #10b981;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-editor.cover-editor h3 { color: var(--accent); }
+
+.control-group { display: flex; flex-direction: column; gap: 12px; }
+
+.control-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-row label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.control-row select, 
+.control-row textarea {
+    background: #1e222b;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: var(--transition);
+}
+
+.control-row select:focus, 
+.control-row textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+/* CUSTOMOWY PRZYCISK UPLOADU PLIKU */
+.file-upload-zone {
+    position: relative;
+    border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: rgba(0,0,0,0.1);
+}
+
+.file-upload-zone:hover {
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.file-upload-zone input[type="file"] {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+}
+
+.file-upload-text {
+    font-size: 12px;
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-upload-text span { color: var(--text-muted); font-size: 10px; }
+
+/* SŁUWAKI (SLIDERS) */
+.slider-container {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0,0,0,0.15);
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 4px;
+}
+.slider-container.visible { display: flex; }
+
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.slider-header .val-indicator { color: #10b981; font-weight: 600; }
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #1e222b;
+    border-radius: 3px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); background: #6366f1;}
+
+/* PRZYCISK POBIERANIA */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #15181e;
+}
+
+button.main-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), #6366f1);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    transition: var(--transition);
+}
+
+button.main-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+/* PRAWA STRONA: STÓŁ ROBOCZY I PODGLĄD */
+.workspace {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.workspace-header {
+    text-align: center;
+    padding-top: 24px;
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.workspace-header h2 { margin: 0; font-size: 22px; font-weight: 700; color: var(--text-dark); }
+.workspace-header p { margin: 6px 0 0 0; font-size: 13px; color: #6b7280; }
+
+.preview-window {
+    background: white;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+}
+
+/* SIATKA MAKIETY */
+.zine-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 8px;
+    background-color: #f3f4f6;
+    border: 2px solid #1f2937;
+    aspect-ratio: 1.4142; /* Stały stosunek proporcji A4 poziom */
+    width: 100%;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+}
+
+.grid-cell {
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.grid-cell.cover-cell {
+    text-align: center;
+    padding: 12px;
+    box-sizing: border-box;
+    word-break: break-word;
+}
+
+.grid-cell span.badge {
+    position: absolute;
+    top: 6px; left: 6px;
+    background: rgba(31, 41, 55, 0.85);
+    color: white;
+    padding: 2px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 4px;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+.grid-cell img {
+    display: block; pointer-events: none; position: absolute;
+}
+.grid-cell img.fit-height { height: 100%; width: auto; }
+.grid-cell img.fit-width  { width: 100%; height: auto; }
+
+.grid-cell .placeholder {
+    color: #d1d5db;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.upside-down { transform: rotate(180deg); }
+
+/* Ukrywanie natywnego scrollbara dla czystego wyglądu */
+.editors-wrapper::-webkit-scrollbar { width: 6px; }
+.editors-wrapper::-webkit-scrollbar-track { background: transparent; }
+.editors-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.editors-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* STYLIZACJA STOPKI INFORMACYJNEJ */
+.app-footer {
+    margin: 30px 0 0 0;
+    padding: 24px 0 24px 0;
+    background: white; 
+    border-radius: var(--radius-lg); 
+    box-shadow: var(--shadow); 
+    max-width: 900px; 
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+.footer-content {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280; /* Dyskretny, szary kolor tekstu */
+    line-height: 1.6;
+}
+
+.footer-content p {
+    margin: 4px 0;
+}
+
+.footer-content strong {
+    color: var(--text-dark); /* Mocniejszy akcent dla nazwiska i licencji */
+}
+
+.footer-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.footer-divider {
+    color: var(--border-color);
+}
+
+@media (max-width: 480px) {
+    .footer-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .footer-divider {
+        display: none;
+    }
+}
+
+/* STYL LINKU W STOPCE */
+.footer-link {
+    color: var(--text-dark);
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+    color: #4f46e5; /* Subtelna zmiana koloru na Twój akcent systemowy przy hoverze */
+    border-bottom-style: solid;
+    border-bottom-color: #4f46e5;
+}
