@@ -1,0 +1,19 @@
+# Ignoruj pliki tymczasowe i systemowe (np. miniatury folderów systemowych)
+.DS_Store
+Thumbs.db
+
+# Ignoruj lokalne pliki konfiguracyjne edytorów kodu
+.vscode/
+.idea/
+
+# Ignoruj ciężkie, surowe pliki graficzne, których nie chcesz na GitHubie
+# (np. jeśli trzymasz w projekcie oryginalne pliki RAW z aparatu)
+*.NEF
+*.CR2
+*.ARW
+*.dng
+*.psd
+
+# Jeśli chcesz ignorować konkretny plik testowy lub cały katalog z dużymi zdjęciami
+olds/
+wersja 01/
