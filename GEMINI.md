@@ -73,7 +73,30 @@ Aplikacja przestaje być ograniczona wyłącznie do standardu europejskiego. W b
 * **Captions (Podpisy):** Opcjonalne pola tekstowe lokowane na marginesie passe-partout, pisane stałym, dyskretnym stopniem pisma (9-10pt).
 
 ### 3.6. Mozliwość podglądu - wizualizacji - zina jako podgląd pojedyńczych stron w poprawnej kolejności
-* **przykład*** https://zinemaker.jill.photos
+* **przykład** https://zinemaker.jill.photos
+
+### 3.7 Rozwiązanie Problemu Marginesów Drukarki (DTP Safe Area)
+Większość domowych i biurowych drukarek nie posiada funkcji fizycznego zadruku krawędziowego (tzw. druku borderless), automatycznie narzucając nienaruszalny margines techniczny sprzętu (zwykle od 3 mm do 6 mm), przez co pełnowymiarowe zdjęcia wejściowe mogłyby zostać drastycznie ucięte na krawędziach arkusza. W celu eliminacji tego błędu w aplikacji wdrożono dwupoziomowy system zabezpieczeń:
+* **Rozwiązanie 1:**: Wizualny Obszar Bezpieczny (Safe Area) w Interfejsie - W trybie edycji makiety, na każdą komórkę (stronę zina) nałożona zostaje półprzezroczysta warstwa maskująca wraz z przerywaną linią pomocniczą. Pokazuje ona użytkownikowi krytyczną strefę ryzyka. Dzięki temu użytkownik – posługując się suwakami kadrowania – podświadomie i bezpiecznie przesuwa kluczowe elementy kompozycji (np. twarze, napisy, detale) w głąb bezpiecznego, ostrego konturu.
+Implementacja CSS:
+```.page-cell {
+    position: relative;
+    overflow: hidden;
+}
+/* Dynamiczna nakładka strefy bezpiecznej wyświetlana tylko w UI */
+.page-cell::after {
+    content: '';
+    position: absolute;
+    top: 5mm;    /* Ekwiwalent średniego marginesu błędu drukarek */
+    left: 5mm;
+    right: 5mm;
+    bottom: 5mm;
+    border: 1px dashed rgba(255, 0, 0, 0.4);
+    pointer-events: none; /* Umożliwia klikanie i przeciąganie elementów pod spodem */
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.15); /* Subtelne zaciemnienie obszaru zagrożonego obcięciem */
+    z-index: 10;
+}
+```
 
 ---
 

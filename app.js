@@ -9,7 +9,18 @@ const zineState = {
     config: {
         paperFormat: "A4" // "A4" | "LETTER"
     },
-    1: { isCover: true, text: "MÓJ ZIN\nwersja 01", theme: "black", fontSize: 32, fontFamily: "sans-serif" }
+    1: { 
+        isCover: true, 
+        text: "MÓJ ZIN", 
+        subtitle: "Podtytuł albumu", 
+        theme: "dark-gray", 
+        fontSize: 32, 
+        fontFamily: "sans-serif",
+        imgObject: null,
+        imgSrc: null,
+        cropPercent: 50,
+        cropMode: 'X'
+    }
 };
 
 for(let i=2; i<=8; i++) {
@@ -53,38 +64,50 @@ function renderEditors() {
     for (let i = 1; i <= 8; i++) {
         const pageBox = document.createElement('div');
         pageBox.id = `editor-page-${i}`;
-        const hasImg = zineState[i].imgSrc ? 'has-image' : '';
+        const pageData = zineState[i];
+        const hasImg = pageData.imgSrc ? 'has-image' : '';
 
         if (i === 1) {
             pageBox.className = `page-editor cover-editor ${hasImg}`;
             pageBox.innerHTML = `
                 <h3>Strona 1 (Okładka)</h3>
                 <div class="control-group">
-                    <div class="control-row">
-                        <label>Tekst tytułowy</label>
-                        <textarea id="cover-text" rows="3" oninput="handleCoverText(this.value)">${zineState[1].text}</textarea>
+                    <div class="file-upload-zone">
+                        <div class="file-upload-text">
+                            <b>Wgraj zdjęcie na okładkę</b>
+                            <span>Kliknij, aby wybrać plik JPG / PNG</span>
+                        </div>
+                        <input type="file" accept="image/*" onchange="handleFile(1, this)">
+                    </div>
+                    <div class="slider-container ${hasImg ? 'visible' : ''}" id="slider-box-1">
+                        <div class="slider-header">
+                            <label id="slider-label-1">${pageData.cropMode === 'X' ? 'Kadr (Poziom)' : 'Kadr (Pion)'}</label>
+                            <span class="val-indicator" id="val-1">${getCropLabel(pageData.cropPercent, pageData.cropMode)}</span>
+                        </div>
+                        <input type="range" id="crop-1" min="0" max="100" value="${pageData.cropPercent}" oninput="handleCropChange(1, this.value)">
                     </div>
                     <div class="control-row">
-                        <label>Stylistyka okładki</label>
-                        <select onchange="handleCoverTheme(this.value)">
-                            <option value="black" ${zineState[1].theme === 'black' ? 'selected' : ''}>Czarne tło / Biały tekst</option>
-                            <option value="white" ${zineState[1].theme === 'white' ? 'selected' : ''}>Białe tło / Czarny tekst</option>
-                        </select>
+                        <label>Tytuł zina</label>
+                        <textarea id="cover-text" rows="2" oninput="handleCoverText(this.value)">${pageData.text || ""}</textarea>
+                    </div>
+                    <div class="control-row">
+                        <label>Podtytuł</label>
+                        <textarea id="cover-subtitle" rows="2" oninput="handleCoverSubtitle(this.value)">${pageData.subtitle || ""}</textarea>
                     </div>
                     <div class="control-row">
                         <label>Krój Pisma</label>
                         <select onchange="handleCoverFont(this.value)">
-                            <option value="sans-serif" ${zineState[1].fontFamily === 'sans-serif' ? 'selected' : ''}>Nowoczesny (Sans-Serif)</option>
-                            <option value="serif" ${zineState[1].fontFamily === 'serif' ? 'selected' : ''}>Klasyczny (Serif)</option>
-                            <option value="monospace" ${zineState[1].fontFamily === 'monospace' ? 'selected' : ''}>Techniczny (Monospace)</option>
+                            <option value="sans-serif" ${pageData.fontFamily === 'sans-serif' ? 'selected' : ''}>Nowoczesny (Sans-Serif)</option>
+                            <option value="serif" ${pageData.fontFamily === 'serif' ? 'selected' : ''}>Klasyczny (Serif)</option>
+                            <option value="monospace" ${pageData.fontFamily === 'monospace' ? 'selected' : ''}>Techniczny (Monospace)</option>
                         </select>
                     </div>
                     <div class="slider-container visible">
                         <div class="slider-header">
                             <label>Rozmiar czcionki</label>
-                            <span class="val-indicator" id="cover-size-val">${Math.round(zineState[1].fontSize * 0.65)} pt</span>
+                            <span class="val-indicator" id="cover-size-val">${Math.round((pageData.fontSize || 32) * 0.65)} pt</span>
                         </div>
-                        <input type="range" min="12" max="98" value="${zineState[1].fontSize}" oninput="handleCoverSize(this.value)">
+                        <input type="range" min="12" max="98" value="${pageData.fontSize || 32}" oninput="handleCoverSize(this.value)">
                     </div>
                 </div>`;
         } else {
@@ -103,10 +126,10 @@ function renderEditors() {
                     </div>
                     <div class="slider-container ${isVisible}" id="slider-box-${i}">
                         <div class="slider-header">
-                            <label id="slider-label-${i}">${zineState[i].cropMode === 'X' ? 'Kadr (Poziom)' : 'Kadr (Pion)'}</label>
-                            <span class="val-indicator" id="val-${i}">${getCropLabel(zineState[i].cropPercent, zineState[i].cropMode)}</span>
+                            <label id="slider-label-${i}">${pageData.cropMode === 'X' ? 'Kadr (Poziom)' : 'Kadr (Pion)'}</label>
+                            <span class="val-indicator" id="val-${i}">${getCropLabel(pageData.cropPercent, pageData.cropMode)}</span>
                         </div>
-                        <input type="range" id="crop-${i}" min="0" max="100" value="${zineState[i].cropPercent}" oninput="handleCropChange(${i}, this.value)">
+                        <input type="range" id="crop-${i}" min="0" max="100" value="${pageData.cropPercent}" oninput="handleCropChange(${i}, this.value)">
                     </div>
                 </div>`;
         }
@@ -130,12 +153,14 @@ function getCropLabel(value, mode) {
 }
 
 function handleCoverText(val) { zineState[1].text = val; updatePreview(); }
+function handleCoverSubtitle(val) { zineState[1].subtitle = val; updatePreview(); }
 function handleCoverTheme(val) { zineState[1].theme = val; updatePreview(); }
 function handleCoverFont(val) { zineState[1].fontFamily = val; updatePreview(); }
 function handleCoverSize(val) { 
     zineState[1].fontSize = parseInt(val); 
     const ptSize = Math.round(val * 0.65);
-    document.getElementById('cover-size-val').innerText = ptSize + ' pt'; 
+    const indicator = document.getElementById('cover-size-val');
+    if (indicator) indicator.innerText = ptSize + ' pt'; 
     updatePreview(); 
 }
 
@@ -152,15 +177,18 @@ function handleFile(pageNum, input) {
             zineState[pageNum].cropPercent = 50;
 
             const imgRatio = img.width / img.height;
-            // Target ratio depends on format
             const isA4 = zineState.config.paperFormat === 'A4';
-            const targetRatio = isA4 ? (74.25 / 105) : (2.75 / 4.25);
-
-            if (imgRatio > targetRatio) {
-                zineState[pageNum].cropMode = 'X';
+            
+            // Aspect ratio detection logic
+            let targetRatio;
+            if (pageNum === 1) {
+                // Cover image is split with text block (text is ~35% of height)
+                targetRatio = isA4 ? (74.25 / (105 * 0.65)) : (2.75 / (4.25 * 0.65));
             } else {
-                zineState[pageNum].cropMode = 'Y';
+                targetRatio = isA4 ? (74.25 / 105) : (2.75 / 4.25);
             }
+
+            zineState[pageNum].cropMode = imgRatio > targetRatio ? 'X' : 'Y';
             
             renderEditors();
             updatePreview();
@@ -222,19 +250,67 @@ function updatePreview() {
         });
 
         const label = cell.label ? cell.label : `Str. ${pageNum}`;
-        cellDiv.innerHTML = `<span class="badge" style="${pageData.isCover && pageData.theme === 'black' ? 'background:rgba(255,255,255,0.4);color:#000;' : ''}">${label}</span>`;
+        const isCoverIdx = pageData.isCover;
+        cellDiv.innerHTML = `<span class="badge" style="${isCoverIdx ? 'background:rgba(0,0,0,0.7);color:#fff;border:1px solid rgba(255,255,255,0.2);' : ''}">${label}</span>`;
+
 
         if (pageData.isCover) {
             cellDiv.className = `grid-cell cover-cell ${cell.isRotated ? 'upside-down' : ''}`;
-            cellDiv.style.backgroundColor = pageData.theme === 'black' ? '#111' : '#fff';
-            cellDiv.style.color = pageData.theme === 'black' ? '#fff' : '#111';
-            cellDiv.style.fontSize = `${pageData.fontSize / 1.8}px`;
-            cellDiv.style.fontFamily = pageData.fontFamily;
+            cellDiv.style.backgroundColor = '#fff';
+            cellDiv.style.display = 'flex';
+            cellDiv.style.flexDirection = 'column';
+            cellDiv.style.justifyContent = 'flex-start';
+            cellDiv.style.alignItems = 'stretch';
             
-            const textNode = document.createElement('div');
-            textNode.style.whiteSpace = "pre-line"; 
-            textNode.innerText = pageData.text;
-            cellDiv.appendChild(textNode);
+            // Image part (Top)
+            const imgContainer = document.createElement('div');
+            imgContainer.style.flex = '1';
+            imgContainer.style.position = 'relative';
+            imgContainer.style.overflow = 'hidden';
+            
+            if (pageData.imgSrc) {
+                const imgEl = document.createElement('img');
+                imgEl.src = pageData.imgSrc;
+                imgEl.style.width = '100%';
+                imgEl.style.height = '100%';
+                imgEl.style.objectFit = 'cover';
+                const finalPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
+                imgEl.style.objectPosition = pageData.cropMode === 'X' ? `${finalPct}% 50%` : `50% ${finalPct}%`;
+                imgContainer.appendChild(imgEl);
+            } else {
+                imgContainer.innerHTML = `<div class="placeholder" style="height:100%; display:flex; align-items:center; justify-content:center;">[ Okładka ]</div>`;
+            }
+            
+            // Text block (Bottom) - section 3.3
+            const textBlock = document.createElement('div');
+            textBlock.style.backgroundColor = '#333'; // dark-gray
+            textBlock.style.color = '#fff';
+            textBlock.style.padding = '8px';
+            textBlock.style.textAlign = 'center';
+            textBlock.style.minHeight = '30%';
+            textBlock.style.display = 'flex';
+            textBlock.style.flexDirection = 'column';
+            textBlock.style.justifyContent = 'center';
+            
+            const titleNode = document.createElement('div');
+            titleNode.style.fontWeight = 'bold';
+            titleNode.style.fontSize = `${(pageData.fontSize || 32) / 2}px`;
+            titleNode.style.fontFamily = pageData.fontFamily || 'sans-serif';
+            titleNode.style.whiteSpace = "pre-line"; 
+            titleNode.innerText = pageData.text || "";
+            
+            const subtitleNode = document.createElement('div');
+            subtitleNode.style.fontSize = `${(pageData.fontSize || 32) / 3.5}px`;
+            subtitleNode.style.fontFamily = pageData.fontFamily || 'sans-serif';
+            subtitleNode.style.marginTop = '4px';
+            subtitleNode.style.opacity = '0.9';
+            subtitleNode.innerText = pageData.subtitle || "";
+            
+            textBlock.appendChild(titleNode);
+            textBlock.appendChild(subtitleNode);
+            
+            cellDiv.appendChild(imgContainer);
+            cellDiv.appendChild(textBlock);
         } else {
             cellDiv.className = `grid-cell ${cell.isRotated ? 'upside-down' : ''}`;
             if (pageData.imgSrc) {
@@ -258,12 +334,16 @@ function updatePreview() {
 }
 
 function swapPages(idxA, idxB) {
-    const temp = { ...zineState[idxA] };
-    const isCoverA = zineState[idxA].isCover;
-    const isCoverB = zineState[idxB].isCover;
+    const dataA = zineState[idxA];
+    const dataB = zineState[idxB];
 
-    zineState[idxA] = { ...zineState[idxB], isCover: isCoverA };
-    zineState[idxB] = { ...temp, isCover: isCoverB };
+    // Whitelist properties to swap (Image & Crop related)
+    const propsToSwap = ['imgObject', 'imgSrc', 'cropPercent', 'cropMode'];
+    
+    const temp = {};
+    propsToSwap.forEach(p => temp[p] = dataA[p]);
+    propsToSwap.forEach(p => dataA[p] = dataB[p]);
+    propsToSwap.forEach(p => dataB[p] = temp[p]);
 
     renderEditors();
     updatePreview();
@@ -289,6 +369,7 @@ function generatePDF() {
         const pageHeight = isA4 ? 210 : 215.9;
         
         const cellWidth = pageWidth / 4; const cellHeight = pageHeight / 2;
+        const margin = 5; // 5mm global white margin (passe-partout)
 
         doc.setDrawColor(210, 210, 210); 
         doc.setLineWidth(0.1);
@@ -301,46 +382,87 @@ function generatePDF() {
         impositionLayout.forEach((cell, index) => {
             const col = index % 4; const row = Math.floor(index / 4);
             const x = col * cellWidth; const y = row * cellHeight;
+            
+            // Safe zone coordinates
+            const safeX = x + margin;
+            const safeY = y + margin;
+            const safeWidth = cellWidth - (margin * 2);
+            const safeHeight = cellHeight - (margin * 2);
+
             const pageData = zineState[cell.pageNum];
 
             if (pageData.isCover) {
-                if (pageData.theme === 'black') {
-                    doc.setFillColor(15, 15, 15); doc.rect(x, y, cellWidth, cellHeight, 'F'); doc.setTextColor(255, 255, 255);
-                } else {
-                    doc.setFillColor(255, 255, 255); doc.rect(x, y, cellWidth, cellHeight, 'F'); doc.setTextColor(15, 15, 15);
-                }
+                const textBlockHeight = safeHeight * 0.35;
+                const textBlockY = safeY + safeHeight - textBlockHeight;
                 
+                doc.setFillColor(51, 51, 51); // dark-gray
+                doc.rect(safeX, textBlockY, safeWidth, textBlockHeight, 'F');
+                
+                if (pageData.imgObject) {
+                    const img = pageData.imgObject;
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    const imgAreaHeight = safeHeight - textBlockHeight;
+                    canvas.width = Math.round(safeWidth * 4);  
+                    canvas.height = Math.round(imgAreaHeight * 4);
+
+                    let sx = 0, sy = 0, sw, sh;
+                    if (pageData.cropMode === 'X') {
+                        const scaleFactor = canvas.height / img.height;
+                        const totalMissingWidthOriginal = img.width - (canvas.width / scaleFactor);
+                        const appliedPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
+                        sx = totalMissingWidthOriginal * (appliedPct / 100);
+                        sw = canvas.width / scaleFactor;
+                        sh = img.height;
+                    } else {
+                        const scaleFactor = canvas.width / img.width;
+                        const totalMissingHeightOriginal = img.height - (canvas.height / scaleFactor);
+                        const appliedPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
+                        sy = totalMissingHeightOriginal * (appliedPct / 100);
+                        sw = img.width;
+                        sh = canvas.height / scaleFactor;
+                    }
+
+                    if (cell.isRotated) {
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+                        ctx.rotate(Math.PI);
+                        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                    }
+
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                    const finalImgData = canvas.toDataURL('image/jpeg', 0.95);
+                    doc.addImage(finalImgData, 'JPEG', safeX, safeY, safeWidth, imgAreaHeight);
+                }
+
                 let pdfFont = 'helvetica';
                 if (pageData.fontFamily === 'serif') pdfFont = 'times';
                 if (pageData.fontFamily === 'monospace') pdfFont = 'courier';
 
-                const actualPtSize = Math.round(pageData.fontSize * 0.65); 
-                doc.setFont(pdfFont, 'bold'); 
-                doc.setFontSize(actualPtSize);
-
-                const maxTextWidth = cellWidth - 10;
-                const lines = doc.splitTextToSize(pageData.text, maxTextWidth);
+                const titleSize = Math.round((pageData.fontSize || 32) * 0.6); 
+                const subtitleSize = Math.round(titleSize * 0.6);
                 
-                const lineHeightInMm = (actualPtSize * 0.3527) * 1.15; 
-                const totalTextHeight = lines.length * lineHeightInMm;
-                const startY = y + (cellHeight / 2) - (totalTextHeight / 2) + (lineHeightInMm / 1.3);
+                doc.setTextColor(255, 255, 255);
+                doc.setFont(pdfFont, 'bold'); 
+                doc.setFontSize(titleSize);
+                
+                const centerX = safeX + (safeWidth / 2);
+                const titleY = textBlockY + (textBlockHeight / 2) - 1;
+                doc.text(pageData.text || "", centerX, titleY, { align: 'center' });
+                
+                doc.setFont(pdfFont, 'normal');
+                doc.setFontSize(subtitleSize);
+                doc.text(pageData.subtitle || "", centerX, titleY + (subtitleSize * 0.5) + 2, { align: 'center' });
 
-                lines.forEach((line, lineIdx) => {
-                    const currentLineY = startY + (lineIdx * lineHeightInMm);
-                    if (currentLineY < y + cellHeight - 2) {
-                        doc.text(line, x + (cellWidth / 2), currentLineY, { align: 'center' });
-                    }
-                });
             } else if (pageData.imgObject) {
                 const img = pageData.imgObject;
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                canvas.width = cellWidth * 4;  
-                canvas.height = cellHeight * 4;
+                canvas.width = Math.round(safeWidth * 4);  
+                canvas.height = Math.round(safeHeight * 4);
 
                 let sx = 0, sy = 0, sw, sh;
-
                 if (pageData.cropMode === 'X') {
                     const scaleFactor = canvas.height / img.height;
                     const totalMissingWidthOriginal = img.width - (canvas.width / scaleFactor);
@@ -365,7 +487,7 @@ function generatePDF() {
 
                 ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
                 const finalImgData = canvas.toDataURL('image/jpeg', 0.95);
-                doc.addImage(finalImgData, 'JPEG', x, y, cellWidth, cellHeight);
+                doc.addImage(finalImgData, 'JPEG', safeX, safeY, safeWidth, safeHeight);
             }
         });
 
