@@ -162,6 +162,7 @@ function handleFormatChange(val) {
     const grid = document.getElementById('preview-grid');
     if (grid) {
         grid.style.aspectRatio = val === 'A4' ? '1.4142' : '1.2941';
+        grid.style.width = val === 'A4' ? '100%' : '94.07%'; // Fix for physical width difference (279.4 / 297)
     }
     updatePreview();
 }

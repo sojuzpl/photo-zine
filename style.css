@@ -285,6 +285,7 @@ button.main-btn:hover {
     border: 2px solid #1f2937;
     aspect-ratio: 1.4142; /* Stały stosunek proporcji A4 poziom */
     width: 100%;
+    margin: 0 auto; /* Centrowanie przy różnych szerokościach formatów */
     position: relative;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
 }
