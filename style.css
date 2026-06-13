@@ -297,6 +297,24 @@ button.main-btn:hover {
     justify-content: center;
     align-items: center;
     box-shadow: 0 0 0 1px #e5e7eb;
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    isolation: isolate;
+    transform: translateZ(0);
+}
+
+.grid-cell:active { cursor: grabbing; }
+
+.grid-cell.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+
+.grid-cell.drag-over {
+    box-shadow: inset 0 0 0 3px var(--primary);
+    background-color: rgba(79, 70, 229, 0.05);
 }
 
 .grid-cell.cover-cell {
@@ -320,10 +338,13 @@ button.main-btn:hover {
 }
 
 .grid-cell img {
-    display: block; pointer-events: none; position: absolute;
+    display: block; 
+    pointer-events: none; 
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
-.grid-cell img.fit-height { height: 100%; width: auto; }
-.grid-cell img.fit-width  { width: 100%; height: auto; }
 
 .grid-cell .placeholder {
     color: #d1d5db;
@@ -334,6 +355,14 @@ button.main-btn:hover {
 }
 
 .upside-down { transform: rotate(180deg); }
+
+.grid-cell.upside-down span.badge {
+    top: auto;
+    left: auto;
+    bottom: 6px;
+    right: 6px;
+    transform: rotate(180deg);
+}
 
 /* Ukrywanie natywnego scrollbara dla czystego wyglądu */
 .editors-wrapper::-webkit-scrollbar { width: 6px; }

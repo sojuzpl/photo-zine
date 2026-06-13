@@ -1,8 +1,8 @@
 const impositionLayout = [
-    { pageNum: 3, isRotated: true }, { pageNum: 4, isRotated: true },
-    { pageNum: 5, isRotated: true }, { pageNum: 6, isRotated: true },
-    { pageNum: 2, isRotated: false }, { pageNum: 1, isRotated: false, label: "1 (Okładka)" },
-    { pageNum: 8, isRotated: false, label: "8 (Tył)" }, { pageNum: 7, isRotated: false }
+    { pageNum: 7, isRotated: true }, { pageNum: 6, isRotated: true },
+    { pageNum: 5, isRotated: true }, { pageNum: 4, isRotated: true },
+    { pageNum: 8, isRotated: false, label: "8 (Back Cover)" }, { pageNum: 1, isRotated: false, label: "1 (Front Cover)" },
+    { pageNum: 2, isRotated: false }, { pageNum: 3, isRotated: false }
 ];
 
 const zineState = {
@@ -13,15 +13,31 @@ for(let i=2; i<=8; i++) {
     zineState[i] = { isCover: false, imgObject: null, imgSrc: null, cropPercent: 50, cropMode: 'X' };
 }
 
+let draggedPageNum = null;
+
 // INICJALIZACJA DOPIERO PO ZAŁADOWANIU DRZEWA DOM
 document.addEventListener("DOMContentLoaded", () => {
+    renderEditors();
+
+    // OBSŁUGA PRZYCISKU POBIERANIA PDF
+    document.getElementById('download-btn').addEventListener('click', generatePDF);
+
+    // PIERWSZE WYGENEROWANIE PODGLĄDU SIATKI
+    updatePreview();
+});
+
+function renderEditors() {
     const editorsContainer = document.getElementById('editors-container');
+    if (!editorsContainer) return;
+    editorsContainer.innerHTML = '';
 
     for (let i = 1; i <= 8; i++) {
         const pageBox = document.createElement('div');
         pageBox.id = `editor-page-${i}`;
+        const hasImg = zineState[i].imgSrc ? 'has-image' : '';
+
         if (i === 1) {
-            pageBox.className = 'page-editor cover-editor';
+            pageBox.className = `page-editor cover-editor ${hasImg}`;
             pageBox.innerHTML = `
                 <h3>Strona 1 (Okładka)</h3>
                 <div class="control-group">
@@ -32,29 +48,30 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="control-row">
                         <label>Stylistyka okładki</label>
                         <select onchange="handleCoverTheme(this.value)">
-                            <option value="black" selected>Czarne tło / Biały tekst</option>
-                            <option value="white">Białe tło / Czarny tekst</option>
+                            <option value="black" ${zineState[1].theme === 'black' ? 'selected' : ''}>Czarne tło / Biały tekst</option>
+                            <option value="white" ${zineState[1].theme === 'white' ? 'selected' : ''}>Białe tło / Czarny tekst</option>
                         </select>
                     </div>
                     <div class="control-row">
                         <label>Krój Pisma</label>
                         <select onchange="handleCoverFont(this.value)">
-                            <option value="sans-serif">Nowoczesny (Sans-Serif)</option>
-                            <option value="serif">Klasyczny (Serif)</option>
-                            <option value="monospace">Techniczny (Monospace)</option>
+                            <option value="sans-serif" ${zineState[1].fontFamily === 'sans-serif' ? 'selected' : ''}>Nowoczesny (Sans-Serif)</option>
+                            <option value="serif" ${zineState[1].fontFamily === 'serif' ? 'selected' : ''}>Klasyczny (Serif)</option>
+                            <option value="monospace" ${zineState[1].fontFamily === 'monospace' ? 'selected' : ''}>Techniczny (Monospace)</option>
                         </select>
                     </div>
                     <div class="slider-container visible">
                         <div class="slider-header">
                             <label>Rozmiar czcionki</label>
-                            <span class="val-indicator" id="cover-size-val">21 pt</span>
+                            <span class="val-indicator" id="cover-size-val">${Math.round(zineState[1].fontSize * 0.65)} pt</span>
                         </div>
                         <input type="range" min="12" max="98" value="${zineState[1].fontSize}" oninput="handleCoverSize(this.value)">
                     </div>
                 </div>`;
         } else {
             const labelText = i === 8 ? "Strona 8 (Tył książki)" : `Strona ${i}`;
-            pageBox.className = 'page-editor';
+            pageBox.className = `page-editor ${hasImg}`;
+            const isVisible = hasImg ? 'visible' : '';
             pageBox.innerHTML = `
                 <h3>${labelText}</h3>
                 <div class="control-group">
@@ -65,24 +82,24 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                         <input type="file" accept="image/*" onchange="handleFile(${i}, this)">
                     </div>
-                    <div class="slider-container" id="slider-box-${i}">
+                    <div class="slider-container ${isVisible}" id="slider-box-${i}">
                         <div class="slider-header">
-                            <label id="slider-label-${i}">Kadrowanie obrazu</label>
-                            <span class="val-indicator" id="val-${i}">Środek</span>
+                            <label id="slider-label-${i}">${zineState[i].cropMode === 'X' ? 'Kadr (Poziom)' : 'Kadr (Pion)'}</label>
+                            <span class="val-indicator" id="val-${i}">${getCropLabel(zineState[i].cropPercent, zineState[i].cropMode)}</span>
                         </div>
-                        <input type="range" id="crop-${i}" min="0" max="100" value="50" oninput="handleCropChange(${i}, this.value)">
+                        <input type="range" id="crop-${i}" min="0" max="100" value="${zineState[i].cropPercent}" oninput="handleCropChange(${i}, this.value)">
                     </div>
                 </div>`;
         }
         editorsContainer.appendChild(pageBox);
     }
+}
 
-    // OBSŁUGA PRZYCISKU POBIERANIA PDF
-    document.getElementById('download-btn').addEventListener('click', generatePDF);
-
-    // PIERWSZE WYGENEROWANIE PODGLĄDU SIATKI
-    updatePreview();
-});
+function getCropLabel(value, mode) {
+    if(value == 50) return 'Środek';
+    else if(value < 50) return mode === 'X' ? 'W lewo' : 'W górę';
+    else return mode === 'X' ? 'W prawo' : 'W dół';
+}
 
 function handleCoverText(val) { zineState[1].text = val; updatePreview(); }
 function handleCoverTheme(val) { zineState[1].theme = val; updatePreview(); }
@@ -106,22 +123,16 @@ function handleFile(pageNum, input) {
             zineState[pageNum].imgSrc = e.target.result;
             zineState[pageNum].cropPercent = 50;
 
-            document.getElementById(`editor-page-${pageNum}`).classList.add('has-image');
-            
             const imgRatio = img.width / img.height;
             const targetRatio = 74.25 / 105;
 
             if (imgRatio > targetRatio) {
                 zineState[pageNum].cropMode = 'X';
-                document.getElementById(`slider-label-${pageNum}`).innerText = "Kadr (Poziom)";
             } else {
                 zineState[pageNum].cropMode = 'Y';
-                document.getElementById(`slider-label-${pageNum}`).innerText = "Kadr (Pion)";
             }
             
-            document.getElementById(`slider-box-${pageNum}`).classList.add('visible');
-            document.getElementById(`crop-${pageNum}`).value = 50;
-            document.getElementById(`val-${pageNum}`).innerText = 'Środek';
+            renderEditors();
             updatePreview();
         };
         img.src = e.target.result;
@@ -132,25 +143,55 @@ function handleFile(pageNum, input) {
 function handleCropChange(pageNum, value) {
     zineState[pageNum].cropPercent = parseInt(value);
     const label = document.getElementById(`val-${pageNum}`);
-    const mode = zineState[pageNum].cropMode;
-    
-    if(value == 50) label.innerText = 'Środek';
-    else if(value < 50) label.innerText = mode === 'X' ? 'W lewo' : 'W górę';
-    else label.innerText = mode === 'X' ? 'W prawo' : 'W dół';
-
+    if (label) label.innerText = getCropLabel(value, zineState[pageNum].cropMode);
     updatePreview();
 }
 
 function updatePreview() {
     const previewGrid = document.getElementById('preview-grid');
-    if (!previewGrid) return; // Zabezpieczenie przed wywołaniem przed załadowaniem DOM
+    if (!previewGrid) return; 
     previewGrid.innerHTML = '';
 
     impositionLayout.forEach(cell => {
         const cellDiv = document.createElement('div');
-        const pageData = zineState[cell.pageNum];
+        const pageNum = cell.pageNum;
+        const pageData = zineState[pageNum];
         
-        const label = cell.label ? cell.label : `Str. ${cell.pageNum}`;
+        cellDiv.draggable = true;
+        cellDiv.addEventListener('dragstart', (e) => {
+            draggedPageNum = pageNum;
+            cellDiv.classList.add('dragging');
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        cellDiv.addEventListener('dragend', () => {
+            cellDiv.classList.remove('dragging');
+            document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('drag-over'));
+        });
+
+        cellDiv.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+        });
+
+        cellDiv.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            cellDiv.classList.add('drag-over');
+        });
+
+        cellDiv.addEventListener('dragleave', () => {
+            cellDiv.classList.remove('drag-over');
+        });
+
+        cellDiv.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cellDiv.classList.remove('drag-over');
+            if (draggedPageNum && draggedPageNum !== pageNum) {
+                swapPages(draggedPageNum, pageNum);
+            }
+        });
+
+        const label = cell.label ? cell.label : `Str. ${pageNum}`;
         cellDiv.innerHTML = `<span class="badge" style="${pageData.isCover && pageData.theme === 'black' ? 'background:rgba(255,255,255,0.4);color:#000;' : ''}">${label}</span>`;
 
         if (pageData.isCover) {
@@ -170,41 +211,33 @@ function updatePreview() {
                 const imgEl = document.createElement('img');
                 imgEl.src = pageData.imgSrc;
                 
-                if (pageData.cropMode === 'X') imgEl.className = 'fit-height';
-                else imgEl.className = 'fit-width';
+                // object-position: X% Y%
+                const finalPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
+                if (pageData.cropMode === 'X') {
+                    imgEl.style.objectPosition = `${finalPct}% 50%`;
+                } else {
+                    imgEl.style.objectPosition = `50% ${finalPct}%`;
+                }
                 
                 cellDiv.appendChild(imgEl);
-                
-                setTimeout(() => {
-                    const containerWidth = cellDiv.clientWidth;
-                    const containerHeight = cellDiv.clientHeight;
-                    const imgWidth = imgEl.clientWidth;
-                    const imgHeight = imgEl.clientHeight;
-                    
-                    if (pageData.cropMode === 'X') {
-                        const maxScroll = imgWidth - containerWidth;
-                        if (maxScroll > 0) {
-                            const finalPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
-                            const offset = (finalPct / 100) * maxScroll;
-                            imgEl.style.left = `-${offset}px`;
-                            imgEl.style.top = '0px';
-                        }
-                    } else {
-                        const maxScroll = imgHeight - containerHeight;
-                        if (maxScroll > 0) {
-                            const finalPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
-                            const offset = (finalPct / 100) * maxScroll;
-                            imgEl.style.top = `-${offset}px`;
-                            imgEl.style.left = '0px';
-                        }
-                    }
-                }, 0);
             } else {
                 cellDiv.innerHTML += `<div class="placeholder">[ Brak obrazu ]</div>`;
             }
         }
         previewGrid.appendChild(cellDiv);
     });
+}
+
+function swapPages(idxA, idxB) {
+    const temp = { ...zineState[idxA] };
+    const isCoverA = zineState[idxA].isCover;
+    const isCoverB = zineState[idxB].isCover;
+
+    zineState[idxA] = { ...zineState[idxB], isCover: isCoverA };
+    zineState[idxB] = { ...temp, isCover: isCoverB };
+
+    renderEditors();
+    updatePreview();
 }
 
 function generatePDF() {
@@ -274,14 +307,14 @@ function generatePDF() {
                 if (pageData.cropMode === 'X') {
                     const scaleFactor = canvas.height / img.height;
                     const totalMissingWidthOriginal = img.width - (canvas.width / scaleFactor);
-                    const appliedPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                    const appliedPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
                     sx = totalMissingWidthOriginal * (appliedPct / 100);
                     sw = canvas.width / scaleFactor;
                     sh = img.height;
                 } else {
                     const scaleFactor = canvas.width / img.width;
                     const totalMissingHeightOriginal = img.height - (canvas.height / scaleFactor);
-                    const appliedPct = cell.isRotated ? pageData.cropPercent : (100 - pageData.cropPercent);
+                    const appliedPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
                     sy = totalMissingHeightOriginal * (appliedPct / 100);
                     sw = img.width;
                     sh = canvas.height / scaleFactor;
