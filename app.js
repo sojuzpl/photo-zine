@@ -6,6 +6,9 @@ const impositionLayout = [
 ];
 
 const zineState = {
+    config: {
+        paperFormat: "A4" // "A4" | "LETTER"
+    },
     1: { isCover: true, text: "MÓJ ZIN\nwersja 01", theme: "black", fontSize: 32, fontFamily: "sans-serif" }
 };
 
@@ -30,6 +33,22 @@ function renderEditors() {
     const editorsContainer = document.getElementById('editors-container');
     if (!editorsContainer) return;
     editorsContainer.innerHTML = '';
+
+    // SEKJA GLOBALNA (CONFIG)
+    const configBox = document.createElement('div');
+    configBox.className = 'page-editor global-config';
+    configBox.innerHTML = `
+        <h3 style="color: var(--primary-hover)">Ustawienia arkusza</h3>
+        <div class="control-group">
+            <div class="control-row">
+                <label>Format Papieru</label>
+                <select onchange="handleFormatChange(this.value)">
+                    <option value="A4" ${zineState.config.paperFormat === 'A4' ? 'selected' : ''}>A4 (297 x 210 mm)</option>
+                    <option value="LETTER" ${zineState.config.paperFormat === 'LETTER' ? 'selected' : ''}>US Letter (8.5 x 11 in)</option>
+                </select>
+            </div>
+        </div>`;
+    editorsContainer.appendChild(configBox);
 
     for (let i = 1; i <= 8; i++) {
         const pageBox = document.createElement('div');
@@ -95,6 +114,15 @@ function renderEditors() {
     }
 }
 
+function handleFormatChange(val) {
+    zineState.config.paperFormat = val;
+    const grid = document.getElementById('preview-grid');
+    if (grid) {
+        grid.style.aspectRatio = val === 'A4' ? '1.4142' : '1.2941';
+    }
+    updatePreview();
+}
+
 function getCropLabel(value, mode) {
     if(value == 50) return 'Środek';
     else if(value < 50) return mode === 'X' ? 'W lewo' : 'W górę';
@@ -124,7 +152,9 @@ function handleFile(pageNum, input) {
             zineState[pageNum].cropPercent = 50;
 
             const imgRatio = img.width / img.height;
-            const targetRatio = 74.25 / 105;
+            // Target ratio depends on format
+            const isA4 = zineState.config.paperFormat === 'A4';
+            const targetRatio = isA4 ? (74.25 / 105) : (2.75 / 4.25);
 
             if (imgRatio > targetRatio) {
                 zineState[pageNum].cropMode = 'X';
@@ -211,7 +241,6 @@ function updatePreview() {
                 const imgEl = document.createElement('img');
                 imgEl.src = pageData.imgSrc;
                 
-                // object-position: X% Y%
                 const finalPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
                 if (pageData.cropMode === 'X') {
                     imgEl.style.objectPosition = `${finalPct}% 50%`;
@@ -248,9 +277,17 @@ function generatePDF() {
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const isA4 = zineState.config.paperFormat === 'A4';
+        
+        const doc = new jsPDF({ 
+            orientation: 'landscape', 
+            unit: 'mm', 
+            format: isA4 ? 'a4' : 'letter' 
+        });
 
-        const pageWidth = 297; const pageHeight = 210;
+        const pageWidth = isA4 ? 297 : 279.4; 
+        const pageHeight = isA4 ? 210 : 215.9;
+        
         const cellWidth = pageWidth / 4; const cellHeight = pageHeight / 2;
 
         doc.setDrawColor(210, 210, 210); 
@@ -332,7 +369,7 @@ function generatePDF() {
             }
         });
 
-        doc.save('perfekt-zine-arkusz.pdf');
+        doc.save(`zine-forge-${zineState.config.paperFormat.toLowerCase()}.pdf`);
     } catch (error) {
         alert("Wystąpił nieoczekiwany błąd podczas generowania PDF: " + error.message);
     }
