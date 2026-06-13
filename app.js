@@ -19,12 +19,20 @@ const zineState = {
         imgObject: null,
         imgSrc: null,
         cropPercent: 50,
-        cropMode: 'X'
+        cropMode: 'X',
+        photoSize: 100
     }
 };
 
 for(let i=2; i<=8; i++) {
-    zineState[i] = { isCover: false, imgObject: null, imgSrc: null, cropPercent: 50, cropMode: 'X' };
+    zineState[i] = { 
+        isCover: false, 
+        imgObject: null, 
+        imgSrc: null, 
+        cropPercent: 50, 
+        cropMode: 'X',
+        photoSize: 100
+    };
 }
 
 let draggedPageNum = null;
@@ -85,6 +93,12 @@ function renderEditors() {
                             <span class="val-indicator" id="val-1">${getCropLabel(pageData.cropPercent, pageData.cropMode)}</span>
                         </div>
                         <input type="range" id="crop-1" min="0" max="100" value="${pageData.cropPercent}" oninput="handleCropChange(1, this.value)">
+                        
+                        <div class="slider-header" style="margin-top:10px">
+                            <label>Skala zdjęcia</label>
+                            <span class="val-indicator" id="size-val-1">${pageData.photoSize}%</span>
+                        </div>
+                        <input type="range" min="40" max="100" value="${pageData.photoSize}" oninput="handleSizeChange(1, this.value)">
                     </div>
                     <div class="control-row">
                         <label>Tytuł zina</label>
@@ -130,6 +144,12 @@ function renderEditors() {
                             <span class="val-indicator" id="val-${i}">${getCropLabel(pageData.cropPercent, pageData.cropMode)}</span>
                         </div>
                         <input type="range" id="crop-${i}" min="0" max="100" value="${pageData.cropPercent}" oninput="handleCropChange(${i}, this.value)">
+                        
+                        <div class="slider-header" style="margin-top:10px">
+                            <label>Skala zdjęcia</label>
+                            <span class="val-indicator" id="size-val-${i}">${pageData.photoSize}%</span>
+                        </div>
+                        <input type="range" min="40" max="100" value="${pageData.photoSize}" oninput="handleSizeChange(${i}, this.value)">
                     </div>
                 </div>`;
         }
@@ -175,14 +195,14 @@ function handleFile(pageNum, input) {
             zineState[pageNum].imgObject = img;
             zineState[pageNum].imgSrc = e.target.result;
             zineState[pageNum].cropPercent = 50;
+            zineState[pageNum].photoSize = 100;
 
             const imgRatio = img.width / img.height;
             const isA4 = zineState.config.paperFormat === 'A4';
             
-            // Aspect ratio detection logic
+            // Correction for split cover layout aspect ratio
             let targetRatio;
             if (pageNum === 1) {
-                // Cover image is split with text block (text is ~35% of height)
                 targetRatio = isA4 ? (74.25 / (105 * 0.65)) : (2.75 / (4.25 * 0.65));
             } else {
                 targetRatio = isA4 ? (74.25 / 105) : (2.75 / 4.25);
@@ -202,6 +222,13 @@ function handleCropChange(pageNum, value) {
     zineState[pageNum].cropPercent = parseInt(value);
     const label = document.getElementById(`val-${pageNum}`);
     if (label) label.innerText = getCropLabel(value, zineState[pageNum].cropMode);
+    updatePreview();
+}
+
+function handleSizeChange(pageNum, value) {
+    zineState[pageNum].photoSize = parseInt(value);
+    const label = document.getElementById(`size-val-${pageNum}`);
+    if (label) label.innerText = value + '%';
     updatePreview();
 }
 
@@ -267,13 +294,19 @@ function updatePreview() {
             imgContainer.style.flex = '1';
             imgContainer.style.position = 'relative';
             imgContainer.style.overflow = 'hidden';
+            imgContainer.style.display = 'flex';
+            imgContainer.style.alignItems = 'center';
+            imgContainer.style.justifyContent = 'center';
             
             if (pageData.imgSrc) {
                 const imgEl = document.createElement('img');
                 imgEl.src = pageData.imgSrc;
-                imgEl.style.width = '100%';
-                imgEl.style.height = '100%';
+                
+                const scale = (pageData.photoSize || 100) / 100;
+                imgEl.style.width = `${scale * 100}%`;
+                imgEl.style.height = `${scale * 100}%`;
                 imgEl.style.objectFit = 'cover';
+
                 const finalPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
                 imgEl.style.objectPosition = pageData.cropMode === 'X' ? `${finalPct}% 50%` : `50% ${finalPct}%`;
                 imgContainer.appendChild(imgEl);
@@ -281,9 +314,9 @@ function updatePreview() {
                 imgContainer.innerHTML = `<div class="placeholder" style="height:100%; display:flex; align-items:center; justify-content:center;">[ Okładka ]</div>`;
             }
             
-            // Text block (Bottom) - section 3.3
+            // Text block (Bottom)
             const textBlock = document.createElement('div');
-            textBlock.style.backgroundColor = '#333'; // dark-gray
+            textBlock.style.backgroundColor = '#333';
             textBlock.style.color = '#fff';
             textBlock.style.padding = '8px';
             textBlock.style.textAlign = 'center';
@@ -317,6 +350,11 @@ function updatePreview() {
                 const imgEl = document.createElement('img');
                 imgEl.src = pageData.imgSrc;
                 
+                const scale = (pageData.photoSize || 100) / 100;
+                imgEl.style.width = `${scale * 100}%`;
+                imgEl.style.height = `${scale * 100}%`;
+                imgEl.style.objectFit = 'cover';
+
                 const finalPct = cell.isRotated ? (100 - pageData.cropPercent) : pageData.cropPercent;
                 if (pageData.cropMode === 'X') {
                     imgEl.style.objectPosition = `${finalPct}% 50%`;
@@ -337,8 +375,8 @@ function swapPages(idxA, idxB) {
     const dataA = zineState[idxA];
     const dataB = zineState[idxB];
 
-    // Whitelist properties to swap (Image & Crop related)
-    const propsToSwap = ['imgObject', 'imgSrc', 'cropPercent', 'cropMode'];
+    // Whitelist properties to swap (Visuals only)
+    const propsToSwap = ['imgObject', 'imgSrc', 'cropPercent', 'cropMode', 'photoSize'];
     
     const temp = {};
     propsToSwap.forEach(p => temp[p] = dataA[p]);
@@ -400,12 +438,19 @@ function generatePDF() {
                 
                 if (pageData.imgObject) {
                     const img = pageData.imgObject;
+                    const scale = (pageData.photoSize || 100) / 100;
+                    
+                    const imgAreaHeight = safeHeight - textBlockHeight;
+                    const scaledW = safeWidth * scale;
+                    const scaledH = imgAreaHeight * scale;
+                    const offX = (safeWidth - scaledW) / 2;
+                    const offY = (imgAreaHeight - scaledH) / 2;
+
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    const imgAreaHeight = safeHeight - textBlockHeight;
-                    canvas.width = Math.round(safeWidth * 4);  
-                    canvas.height = Math.round(imgAreaHeight * 4);
+                    canvas.width = Math.round(scaledW * 4);  
+                    canvas.height = Math.round(scaledH * 4);
 
                     let sx = 0, sy = 0, sw, sh;
                     if (pageData.cropMode === 'X') {
@@ -432,7 +477,7 @@ function generatePDF() {
 
                     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
                     const finalImgData = canvas.toDataURL('image/jpeg', 0.95);
-                    doc.addImage(finalImgData, 'JPEG', safeX, safeY, safeWidth, imgAreaHeight);
+                    doc.addImage(finalImgData, 'JPEG', safeX + offX, safeY + offY, scaledW, scaledH);
                 }
 
                 let pdfFont = 'helvetica';
@@ -456,11 +501,18 @@ function generatePDF() {
 
             } else if (pageData.imgObject) {
                 const img = pageData.imgObject;
+                const scale = (pageData.photoSize || 100) / 100;
+                
+                const scaledW = safeWidth * scale;
+                const scaledH = safeHeight * scale;
+                const offX = (safeWidth - scaledW) / 2;
+                const offY = (safeHeight - scaledH) / 2;
+
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                canvas.width = Math.round(safeWidth * 4);  
-                canvas.height = Math.round(safeHeight * 4);
+                canvas.width = Math.round(scaledW * 4);  
+                canvas.height = Math.round(scaledH * 4);
 
                 let sx = 0, sy = 0, sw, sh;
                 if (pageData.cropMode === 'X') {
@@ -487,7 +539,7 @@ function generatePDF() {
 
                 ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
                 const finalImgData = canvas.toDataURL('image/jpeg', 0.95);
-                doc.addImage(finalImgData, 'JPEG', safeX, safeY, safeWidth, safeHeight);
+                doc.addImage(finalImgData, 'JPEG', safeX + offX, safeY + offY, scaledW, scaledH);
             }
         });
 
