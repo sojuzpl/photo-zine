@@ -168,9 +168,9 @@ const zineState = {
 * **Opis:** Biblioteka `jsPDF` nie obsługuje natywnie standardów zgodności z drukiem (PDF/X, PDF/A), co jest wymogiem wielu profesjonalnych drukarni.
 * **Obejście:** Wymagane jest post-processing wygenerowanego pliku PDF za pomocą zewnętrznych narzędzi (np. Ghostscript, Adobe Acrobat) w celu przekonwertowania go do standardu PDF/X-1a:2001.
 
-### 7.3. Optymalizacja jakości PDF
+### 7.4. Poprawka renderowania kolorowego tła tekstu w PDF
 * **Status:** Zrealizowane.
-* **Opis:** Zwiększono rozdzielczość renderowania obrazów na canvasie (mnożnik 10x) oraz podniesiono jakość kompresji JPEG do 1.0 w celu poprawy ostrości zdjęć w wygenerowanym pliku PDF.
+* **Opis:** Naprawiono błąd, przez który nowe kolory tła tekstu na okładce (czerwony, niebieski, zielony, pomarańczowy, purpurowy, fioletowy) renderowały się jako białe w eksporcie PDF. Centralizacja definicji kolorów w `app.js` zapewniła spójność między podglądem a wygenerowanym plikiem PDF.
 
 
 ---
@@ -178,7 +178,7 @@ const zineState = {
 ## 8. Metadane Projektu
 
 * **Nazwa:** PhotoZineForge
-* **Wersja:** v2.2.2 (Current Stable)
+* **Wersja:** v2.2.3 (Current Stable)
 * **Autor:** Zbigniew Pietras
 * **Technologie:** HTML5, CSS3, JS (ES6+), jsPDF, EasyQRCodeJS.
 

@@ -5,6 +5,18 @@ const impositionLayout = [
     { pageNum: 2, isRotated: false }, { pageNum: 3, isRotated: false }
 ];
 
+const COVER_BG_COLORS = {
+    'none': { rgba: 'transparent', rgb: null },
+    'black': { rgba: 'rgba(0,0,0,0.8)', rgb: [0, 0, 0] },
+    'white': { rgba: 'rgba(255,255,255,0.8)', rgb: [255, 255, 255] },
+    'red': { rgba: 'rgba(255,0,0,0.8)', rgb: [255, 0, 0] },
+    'blue': { rgba: 'rgba(0,0,255,0.8)', rgb: [0, 0, 255] },
+    'green': { rgba: 'rgba(0,128,0,0.8)', rgb: [0, 128, 0] },
+    'orange': { rgba: 'rgba(255,165,0,0.8)', rgb: [255, 165, 0] },
+    'purple': { rgba: 'rgba(128,0,128,0.8)', rgb: [128, 0, 128] },
+    'violet': { rgba: 'rgba(238,130,238,0.8)', rgb: [238, 130, 238] }
+};
+
 const zineState = {
     config: {
         paperFormat: "A4", // "A4" | "LETTER"
@@ -858,7 +870,18 @@ function generatePDF() {
                     // Draw background (Rotated)
                     if (pageData.textBgColor !== 'none') {
                         const rBlock = rotPos(blockX + blockWidth / 2, blockY + blockHeight / 2);
-                        doc.setFillColor(pageData.textBgColor === 'black' ? 0 : 255);
+                        const bgColors = {
+                            'black': [0, 0, 0],
+                            'white': [255, 255, 255],
+                            'red': [255, 0, 0],
+                            'blue': [0, 0, 255],
+                            'green': [0, 128, 0],
+                            'orange': [255, 165, 0],
+                            'purple': [128, 0, 128],
+                            'violet': [238, 130, 238]
+                        };
+                        const rgb = bgColors[pageData.textBgColor] || [255, 255, 255];
+                        doc.setFillColor(rgb[0], rgb[1], rgb[2]);
                         doc.setGState(new doc.GState({opacity: 0.75}));
                         doc.rect(rBlock.x - blockWidth / 2, rBlock.y - blockHeight / 2, blockWidth, blockHeight, 'F');
                         doc.setGState(new doc.GState({opacity: 1.0}));
@@ -883,7 +906,18 @@ function generatePDF() {
                 } else {
                     // Draw background (Normal)
                     if (pageData.textBgColor !== 'none') {
-                        doc.setFillColor(pageData.textBgColor === 'black' ? 0 : 255);
+                        const bgColors = {
+                            'black': [0, 0, 0],
+                            'white': [255, 255, 255],
+                            'red': [255, 0, 0],
+                            'blue': [0, 0, 255],
+                            'green': [0, 128, 0],
+                            'orange': [255, 165, 0],
+                            'purple': [128, 0, 128],
+                            'violet': [238, 130, 238]
+                        };
+                        const rgb = bgColors[pageData.textBgColor] || [255, 255, 255];
+                        doc.setFillColor(rgb[0], rgb[1], rgb[2]);
                         doc.setGState(new doc.GState({opacity: 0.75}));
                         doc.rect(blockX, blockY, blockWidth, blockHeight, 'F');
                         doc.setGState(new doc.GState({opacity: 1.0}));
