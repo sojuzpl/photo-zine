@@ -160,9 +160,8 @@ const zineState = {
 ## 7. Aktywne Błędy i Problemy Techniczne (Technical Debt)
 
 ### 7.1. Niezgodność Wyrównania Tekstu w PDF (Captions & Cover)
-* **Status:** Do rozwiązania.
-* **Opis:** Tekst podpisów (Captions) oraz tekst na okładce (Cover) w wygenerowanym pliku PDF wykracza poza granice swoich ramek z tłem (Background Rectangles), mimo że same ramki są pozycjonowane poprawnie. Problem nasila się na stronach odwróconych o 180°.
-* **Wyzwanie:** Niestandardowe zachowanie punktów zakotwiczenia (`baseline`) w `jsPDF` przy połączeniu parametrów `align` oraz `angle: 180`. Wymaga głębszej analizy matematycznej transformacji współrzędnych biblioteki.
+* **Status:** Poprawiono (Captions).
+* **Opis:** Tekst podpisów (Captions) na stronach odwróconych o 180° był błędnie umieszczany przy zgięciu (fold). Został przesunięty do krawędzi zewnętrznej (edge) dla spójności z pozostałymi stronami.
 
 ### 7.2. Ograniczenia techniczne: Brak wsparcia dla PDF/X
 * **Status:** Ograniczenie biblioteczne.
@@ -179,7 +178,7 @@ const zineState = {
 ## 8. Metadane Projektu
 
 * **Nazwa:** PhotoZineForge
-* **Wersja:** v2.2.1 (Current Stable)
+* **Wersja:** v2.2.2 (Current Stable)
 * **Autor:** Zbigniew Pietras
-* **Technologie:** HTML5, CSS3, JS (ES6+), jsPDF, QRCode.js.
+* **Technologie:** HTML5, CSS3, JS (ES6+), jsPDF, EasyQRCodeJS.
 

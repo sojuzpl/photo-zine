@@ -958,43 +958,55 @@ function generatePDF() {
 
                     let capY, rectY;
                     if (cell.isRotated) {
-                        const cellCenterY = y + cellHeight / 2;
-                        rectY = safeY + 4; // 4mm from top of cell
-                        const rotatedRectY = 2 * cellCenterY - (rectY + rectHeight);
-                        rectY = rotatedRectY;
+                        // Rotated pages (4-7): Edge is at physical top, Fold is at bottom.
+                        // We want captions at the Edge (bottom of viewer page).
+                        rectY = safeY + 4; 
                         capY = rectY + (rectHeight - textBaselineOffset);
                     } else {
                         rectY = safeY + safeHeight - 4 - rectHeight; // 4mm from bottom
                         capY = rectY + textBaselineOffset;
                     }
 
-                    // For rotated text (angle:180), left/right alignment is visually flipped.
-                    let captionAlignH = pageData.captionAlignH;
+                    // With angle:180, jsPDF draws text going LEFT from the capX anchor.
+                    // So for rotated cells we set capX = textVisualLeft + textWidth,
+                    // which makes text land exactly over the rect (going leftward from capX).
+                    // We do NOT use the 'align' option — position is computed manually.
+                    // For rotated cells, left/right alignment is also physically mirrored
+                    // (reader's left = physical right, because the page is flipped when read).
+
+                    let textVisualLeft;
                     if (cell.isRotated) {
-                        if (captionAlignH === 'left') captionAlignH = 'right';
-                        else if (captionAlignH === 'right') captionAlignH = 'left';
+                        if (pageData.captionAlignH === 'center') {
+                            textVisualLeft = safeX + (safeWidth - textWidth) / 2;
+                        } else if (pageData.captionAlignH === 'left') {
+                            // Reader's left → physical right edge of cell
+                            textVisualLeft = safeX + safeWidth - 2 - textWidth;
+                        } else { // right → physical left edge
+                            textVisualLeft = safeX + 2;
+                        }
+                    } else {
+                        if (pageData.captionAlignH === 'center') {
+                            textVisualLeft = safeX + (safeWidth - textWidth) / 2;
+                        } else if (pageData.captionAlignH === 'right') {
+                            textVisualLeft = safeX + safeWidth - 2 - textWidth;
+                        } else { // left
+                            textVisualLeft = safeX + 2;
+                        }
                     }
 
-                    let capX, rectX;
-                    if (captionAlignH === 'center') {
-                        capX = safeX + (safeWidth / 2);
-                        rectX = capX - (textWidth + 2) / 2;
-                    } else if (captionAlignH === 'right') {
-                        capX = safeX + safeWidth - 2;
-                        rectX = capX - (textWidth + 2);
-                    } else { // left
-                        capX = safeX + 2;
-                        rectX = capX;
-                    }
-                    
+                    const rectX = textVisualLeft - 1;
+                    // For angle:180 text goes LEFT from capX → place capX at the right edge of visual area
+                    // For angle:0 text goes RIGHT from capX → place capX at the left edge
+                    const capX = cell.isRotated ? textVisualLeft + textWidth : textVisualLeft;
+
                     // Draw background rectangle
                     doc.setFillColor(0, 0, 0);
                     doc.setGState(new doc.GState({opacity: 0.6}));
                     doc.rect(rectX, rectY, textWidth + 2, rectHeight, 'F');
                     doc.setGState(new doc.GState({opacity: 1.0}));
-                    
-                    // Draw text (rotated 180° for upside-down cells)
-                    doc.text(capText, capX, capY, { align: captionAlignH, angle: cell.isRotated ? 180 : 0 });
+
+                    // Draw text — no 'align' option, position already manually computed above
+                    doc.text(capText, capX, capY, { angle: cell.isRotated ? 180 : 0 });
                 }
             }
 
