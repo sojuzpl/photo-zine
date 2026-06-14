@@ -41,6 +41,33 @@ Wersja v2.0.0 rozbudowała aplikację o zaawansowane funkcje interaktywne, wielo
 * **Matryca Impozycji v2:** Skonfigurowana według standardu: 
     * Góra (180°): Str. 7, 6, 5, 4. 
     * Dół (0°): Str. 8, 1 (Cover), 2, 3.
+* **Modernizacja UI (v2.2.1):**
+    * Ujednolicenie stylistyki list rozwijanych (`select`): Wszystkie listy rozwijane otrzymały nowy, spójny styl (klasa `.custom-select`), dopasowany do reszty interfejsu (czarne obramowanie, brak zaokrągleń, niestandardowa strzałka).
+    * **Zmiana etykiety przycisku PDF:** Zmieniono treść przycisku eksportu na "EKSPORTUJ ARKUSZ JAKO PDF" w celu poprawy czytelności akcji.
+    * **Ujednolicenie wysokości przycisków:** Wysokość głównego przycisku wgrywania zdjęć (`.upload-btn-main`) została wyrównana do wysokości przycisków wyboru formatu (`.flat-btn`) poprzez ujednolicenie wartości `padding`.
+    * **Oczyszczenie interfejsu:** Usunięto opisowy tekst znajdujący się pod głównym tytułem makiety w obszarze roboczym.
+    * **Standaryzacja układu makiety:** Usunięto dynamiczne skalowanie szerokości siatki makiety, aby zachować identyczne marginesy i padding niezależnie od wybranego formatu papieru (A4/US Letter).
+    * **Rozszerzona paleta kolorów tła:** Dodano nowe opcje kolorystyczne dla tła tekstu na okładce (czerwony, niebieski, zielony, pomarańczowy, purpurowy, fioletowy) dla lepszej personalizacji zina.
+    * **Wyrównanie obszaru roboczego (Workspace):** Zmieniono wyrównanie pionowe głównego obszaru roboczego (tytuł + makieta) na wyrównanie do górnej krawędzi (`flex-start`) dla zapewnienia lepszego układu niezależnie od ilości treści.
+    * **Przebudowa nagłówka paska bocznego (Sidebar):** Zaktualizowano układ nagłówka paska bocznego, umieszczając informacje o wersji i licencji bezpośrednio pod rokiem i nazwiskiem autora, tworząc spójną sekcję informacyjną nad przyciskiem instrukcji.
+    * **Optymalizacja popupu instrukcji:** Zwiększono szerokość popupu z instrukcją składania do 80% szerokości okna przeglądarki oraz dodano możliwość przewijania (scroll) dla zawartości przekraczającej 80% wysokości okna.
+* **Modernizacja UI (v2.1.2):**
+    * **System Ikon SVG:** Zastąpienie tekstowych ikon (emoji) profesjonalnymi plikami SVG dla wszystkich kontrolek wyrównania (align, valign).
+    * **Inteligentny Kontrast:** Implementacja filtra `invert(1)` w CSS dla aktywnych przycisków, zapewniająca doskonałą czytelność ikon na ciemnym tle.
+    * **Optymalizacja Layoutu:** Ujednolicenie układu przycisków pozycjonowania (H/V) do spójnej siatki poziomej, poprawiające ergonomię panelu bocznego.
+* **Modernizacja UI (v2.1.1):**
+    * **Cover Overlay System:** Przejście z dzielonego układu okładki (obraz/tekst) na system nakładki (overlay). Tytuł i podtytuł są teraz umieszczone bezpośrednio na zdjęciu, które zajmuje pełną powierzchnię strony.
+    * **Proporcjonalne Passe-partout Tekstu:** Wprowadzenie dynamicznego marginesu wewnętrznego (padding) dla bloku tekstu na okładce, który skaluje się wraz z rozmiarem czcionki, zapewniając spójność wizualną z podpisami na pozostałych stronach.
+    * **Zoptymalizowana Impozycja Okładki:** Pełna synchronizacja krowania (crop) i skalowania zdjęć na okładce zarówno w UI, jak i w silniku PDF.
+* **Modernizacja UI (v2.1.0):**
+    * **Black & White Aesthetic:** Przejście na minimalistyczny, kontrastowy interfejs (czarno-biały) zgodny ze standardami wydawniczymi.
+    * **Zoptymalizowany Panel Boczny:** Zastąpienie długiej listy kart sekcjami funkcyjnymi (Format, Zdjęcia, Okładka, QR, Podpisy, Filtry).
+    * **System Masowego Uploadu:** Możliwość wczytania do 8 zdjęć naraz z automatycznym przypisaniem do kolejnych stron.
+    * **Interaktywna Makieta v2:** Bezpośrednie wgrywanie zdjęć poprzez kliknięcie w komórkę siatki oraz szybkie usuwanie (przycisk 'x').
+    * **Zaawansowane Pozycjonowanie Okładki:** Pełna kontrola nad wyrównaniem bloku tekstowego (H: Lewo/Środek/Prawo, V: Góra/Środek/Dół) oraz kolorystyką (Brak/Czarny/Biały dla tła).
+    * **Lokalne Kody QR:** Generowanie kodów QR bezpośrednio w przeglądarce (strona 8) z możliwością pozycjonowania.
+    * **Globalny Filtr Monochromatyczny:** Jeden przełącznik zmieniający wszystkie zdjęcia w projekcie na wersję czarno-białą (UI i PDF).
+    * **System Podpisów (Captions):** Dodawanie dyskretnych opisów pod zdjęciami na stronach 2-8 z kontrolą wyrównania.
 
 ---
 
@@ -50,12 +77,21 @@ Wersja v2.0.0 rozbudowała aplikację o zaawansowane funkcje interaktywne, wielo
 * Implementacja wyboru koloru passe-partout (Białe / Czarne).
 * **Asymetryczne Przesunięcie Y:** Możliwość przesuwania zdjęcia w pionie wewnątrz pola strony (np. większy margines dolny dla eleganckiego looku albumowego).
 
-### 3.2. Podpisy (Captions)
-* Opcjonalne pola tekstowe pod zdjęciami (na marginesie białym) pisane stałym, dyskretnym stopniem pisma (9-10pt).
+### 3.2. Podpisy (Rozwinięte w v2.1.0)
+* Zrealizowane w systemie Captions.
 
-### 3.3. Interaktywna Wizualizacja Finalna (Zine Preview)
+### 3.3. Interaktywna Wizualizacja Finalna (Zine Preview) 
 * Moduł pozwalający na podejrzenie zina w formie cyfrowej "książeczki" (strona po stronie w kolejności 1-8) przed eksportem do PDF.
+* moduł powinnien pojawić się w popup'ie z opcją przewijania stron
 
+### 3.4. Zmiana informacji o formacie w <div class="workspace-header">
+* Zrealizowane w v2.1.0.
+
+### 3.10. English version of application (v2.2.0)
+
+### 3.11. Dodanie ikonki aplikacji dla przeglądarek mobilnych i stacjonarnych (ikonka pojawia się w zakładce strony)
+
+---
 ---
 
 ## 4. Baza Wiedzy i Rozwiązywanie Problemów
@@ -69,6 +105,19 @@ Wersja v2.0.0 rozbudowała aplikację o zaawansowane funkcje interaktywne, wielo
 ### 4.3. Problem "Białego Ekranu" (Shadow Overflow)
 * **Rozwiązanie:** Zamiana masywnych cieni typu spread na bezpieczne `inset box-shadow: 5mm`, co zapobiega zakrywaniu elementów interfejsu poza siatką makiety.
 
+### 4.4. Obsługa QR i Captions w PDF (v2.1.0)
+* **Rozwiązanie:** Zastosowanie `setTimeout` przy eksporcie PDF, aby zapewnić synchronizację z generatorem QRCode.js oraz implementacja renderowania podpisów wewnątrz Safe Area.
+
+### 4.6. Poprawka utraty fokusu pola QR Code URL oraz ulepszenie renderowania QR
+* **Fokus:** Modyfikacja funkcji `handleQR` w celu pominięcia funkcji `renderEditors()` podczas aktualizacji pola tekstowego adresu URL, co zapobiega przeładowywaniu DOM i utracie fokusu podczas wpisywania adresu.
+* **Jakość, rozmiar i wyrównanie (v2.2.0):**
+    * Przejście na bibliotekę **EasyQRCodeJS** (renderowanie wysokiej rozdzielczości 1024x1024px do **Canvas**), co zapewnia najwyższą jakość w pliku PDF oraz na ekranie podglądu.
+    * Wprowadzono kontrolę rozmiaru kodu QR z predefiniowanymi wartościami (20, 27, 35, 40 mm). Podgląd interaktywny w aplikacji został zaktualizowany, aby poprawnie odzwierciedlać wybrany rozmiar.
+    * Poprawiono logikę wyrównania: kod QR jest teraz centrowany względem swojego środka geometrycznego, a nie lewego górnego rogu.
+
+### 4.5. Poprawka Kadrowania Okładki (v2.1.1)
+* **Rozwiązanie:** Zsynchronizowanie logiki obliczania `cropMode` (X/Y) dla okładki we wszystkich metodach uploadu (`handleSingleFile`, `handleBulkFile`). Poprzednia wersja używała nieaktualnych proporcji (0.65 wysokości), co blokowało poprawne przesuwanie obrazu po przejściu na system pełnostronicowego Overlay'u.
+
 ---
 
 ## 5. Aktualna Struktura Stanu Aplikacji (`zineState`)
@@ -76,7 +125,9 @@ Wersja v2.0.0 rozbudowała aplikację o zaawansowane funkcje interaktywne, wielo
 ```javascript
 const zineState = {
     config: {
-        paperFormat: "A4"       // "A4" | "LETTER"
+        paperFormat: "A4",       // "A4" | "LETTER"
+        globalMonochrome: false,
+        qrCode: { url: "", enabled: false, alignH: "center", alignV: "bottom" }
     },
     // Strona 1: Okładka Przednia
     1: { 
@@ -86,7 +137,10 @@ const zineState = {
         imgObject: null, 
         cropPercent: 50,
         photoSize: 100,
-        // ... parametry fontu
+        alignH: "center",
+        alignV: "bottom",
+        textColor: "white",
+        textBgColor: "black"
     },
     // Strony 2-8
     2: {
@@ -94,16 +148,38 @@ const zineState = {
         imgObject: null,
         cropPercent: 50,
         photoSize: 100,
-        cropMode: 'X' // 'X' | 'Y' (Auto-detected)
+        cropMode: 'X',
+        caption: "",
+        captionAlignH: "center"
     }
 };
 ```
 
 ---
 
-## 6. Metadane Projektu
+## 7. Aktywne Błędy i Problemy Techniczne (Technical Debt)
+
+### 7.1. Niezgodność Wyrównania Tekstu w PDF (Captions & Cover)
+* **Status:** Do rozwiązania.
+* **Opis:** Tekst podpisów (Captions) oraz tekst na okładce (Cover) w wygenerowanym pliku PDF wykracza poza granice swoich ramek z tłem (Background Rectangles), mimo że same ramki są pozycjonowane poprawnie. Problem nasila się na stronach odwróconych o 180°.
+* **Wyzwanie:** Niestandardowe zachowanie punktów zakotwiczenia (`baseline`) w `jsPDF` przy połączeniu parametrów `align` oraz `angle: 180`. Wymaga głębszej analizy matematycznej transformacji współrzędnych biblioteki.
+
+### 7.2. Ograniczenia techniczne: Brak wsparcia dla PDF/X
+* **Status:** Ograniczenie biblioteczne.
+* **Opis:** Biblioteka `jsPDF` nie obsługuje natywnie standardów zgodności z drukiem (PDF/X, PDF/A), co jest wymogiem wielu profesjonalnych drukarni.
+* **Obejście:** Wymagane jest post-processing wygenerowanego pliku PDF za pomocą zewnętrznych narzędzi (np. Ghostscript, Adobe Acrobat) w celu przekonwertowania go do standardu PDF/X-1a:2001.
+
+### 7.3. Optymalizacja jakości PDF
+* **Status:** Zrealizowane.
+* **Opis:** Zwiększono rozdzielczość renderowania obrazów na canvasie (mnożnik 10x) oraz podniesiono jakość kompresji JPEG do 1.0 w celu poprawy ostrości zdjęć w wygenerowanym pliku PDF.
+
+
+---
+
+## 8. Metadane Projektu
 
 * **Nazwa:** PhotoZineForge
-* **Wersja:** v2.1.0 (Current Stable)
+* **Wersja:** v2.2.1 (Current Stable)
 * **Autor:** Zbigniew Pietras
-* **Technologie:** HTML5, CSS3 (Grid/Isolation), JS (ES6+), jsPDF.
+* **Technologie:** HTML5, CSS3, JS (ES6+), jsPDF, QRCode.js.
+

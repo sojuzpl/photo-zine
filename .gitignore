@@ -17,3 +17,6 @@ Thumbs.db
 # Jeśli chcesz ignorować konkretny plik testowy lub cały katalog z dużymi zdjęciami
 olds/
 wersja_01/
+ui_example/
+bugs/
+obrazki_demo/
