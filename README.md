@@ -6,17 +6,17 @@ Aplikacja działa w 100% w przeglądarce użytkownika (client-side) – zdjęcia
 
 ---
 
-## 🚀 Główne Funkcje
+## 🚀 Główne funkcje
 
-* **Automatyczna Impozycja Drukarska:** Narzędzie automatycznie obraca i układa strony (w tym strony odwrócone "do góry nogami" na arkuszu) zgodnie z technicznym schematem składania zinu z jednej kartki.
-* **Podgląd w Czasie Rzeczywistym:** Dynamiczny podgląd całego arkusza makiety podczas wgrywania zdjęć oraz edycji okładki.
-* **Zaawansowane Kadrowanie (Zintegrowany Slider):** Automatyczna detekcja proporcji wgranych plików i inteligentne dopasowanie osi przewijania kadru (pionowe lub poziome) w zależności od orientacji zdjęcia.
-* **Personalizacja Okładki:** Możliwość wpisania wielolinijkowego tekstu, wyboru krojów pisma (Sans-Serif, Serif, Monospace) oraz szybkiej zmiany motywu kolorystycznego (jasny/ciemny).
-* **Eksport do Standardu DTP (PDF):** Generowanie gotowego do druku pliku PDF w przestrzeni wektorowej o wysokiej jakości za pomocą biblioteki `jsPDF`.
+* **Automatyczna impozycja drukarska:** narzędzie automatycznie obraca i układa strony (w tym strony odwrócone "do góry nogami" na arkuszu) zgodnie z technicznym schematem składania zinu z jednej kartki.
+* **Podgląd w czasie rzeczywistym:** dynamiczny podgląd całego arkusza makiety podczas wgrywania zdjęć oraz edycji okładki.
+* **Zaawansowane kadrowanie (zintegrowany slider):** automatyczna detekcja proporcji wgranych plików i inteligentne dopasowanie osi przewijania kadru (pionowe lub poziome) w zależności od orientacji zdjęcia.
+* **Personalizacja okładki:** możliwość wpisania wielolinijkowego tekstu, wyboru krojów pisma (Sans-Serif, Serif, Monospace) oraz szybkiej zmiany motywu kolorystycznego (jasny/ciemny).
+* **Eksport do standardu DTP (PDF):** generowanie gotowego do druku pliku PDF w przestrzeni wektorowej o wysokiej jakości za pomocą biblioteki `jsPDF`.
 
 ---
 
-## 📁 Struktura Projektu
+## 📁 Struktura projektu
 
 Projekt został zorganizowany zgodnie z dobrymi praktykami separacji kodu (Separation of Concerns):
 
